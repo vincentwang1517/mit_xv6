@@ -31,23 +31,42 @@ void find(char* path, char* key)
     // split filename and save to buf
     for (p = path + strlen(path); p >= path && *p != '/'; p--);
     p++;
-    memmove(buf, p, strlen(p));
+    strcpy(buf, p); // will copy 0
+    // memmove(buf, p, strlen(p));
+
     // if match the key, print the path
     if (strcmp(buf, key) == 0) {
-      fprintf(1, path, strlen(path));
+      fprintf(1, "%s\n", path);
     }
     break;
 
   case T_DIR:
+    // put path into buf
+    if (strlen(path) + 1 + DIRSIZ + 1 > sizeof(buf)) {
+      printf("find: path too long\n");
+      break;
+    }
+    strcpy(buf, path);
+    p = buf + strlen(path);
+    *p++ = '/'; // replace 0 with '/'
+
     // read all following files
     while(read(fd, &de, sizeof(de)) == sizeof(de))
     {
       if (de.inum == 0) 
         continue;
-      fprintf(1, "%s\n", de.name);
+      if (strcmp(de.name, ".") == 0 || strcmp(de.name, "..") == 0)
+        continue;
+
+      // compose the path
+      strcpy(p, de.name);
+      find(buf, key);
     }
     break;
   }
+  
+  // has to close bc one process can have at max 16 fd
+  close(fd);
 
   return;
 }
