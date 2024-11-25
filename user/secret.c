@@ -13,8 +13,21 @@ main(int argc, char *argv[])
   }
   char *end = sbrk(PGSIZE*32);
   end = end + 9 * PGSIZE;
-  strcpy(end, "my very very very secret pw is:   ");
-  strcpy(end+32, argv[1]);
+
+  // strcpy(end, "my very very very secret pw is:   ");
+  // strcpy(end+32, argv[1]);
+
+  char find_str[41];
+  memmove(find_str, "my very very very secret pw is:   ", 32);
+  memmove(find_str + 32, argv[1], 8);
+  memmove(end, find_str, 40);
+
+  // char find_str[41];
+  // strcpy(find_str, "my very very very secret pw is: ");
+  // strcpy(find_str + 32, argv[1]);
+  // // printf("%s\n", find_str);
+  // memmove(end, find_str, 40);
+
   exit(0);
 }
 
