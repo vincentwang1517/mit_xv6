@@ -85,7 +85,7 @@ kvminithart()
 pte_t *
 walk(pagetable_t pagetable, uint64 va, int alloc)
 {
-  if(va >= MAXVA)
+  if(va >= MAXVA) 
     panic("walk");
 
   for(int level = 2; level > 0; level--) {
@@ -447,5 +447,29 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     return 0;
   } else {
     return -1;
+  }
+}
+
+void
+vmprint(pagetable_t pagetable, int layer)
+{
+  for (int i = 0; i < 512; i++) {
+    pte_t pte = pagetable[i];
+
+    if ((pte & PTE_V)) {
+      // print layer
+      if (layer == 0) printf("..%d: ", i);
+      else if (layer == 1) printf(".. ..%d: ", i);
+      else if (layer == 2) printf(".. .. ..%d: ", i);
+      else panic("vmprint: layer should <= 2");
+
+      pagetable_t pa = (pagetable_t)PTE2PA(pte);
+      printf("pte %p pa %p\n", (uint64*)pte, pa);
+
+      // if not leaf
+      if ((pte & (PTE_R | PTE_W | PTE_X)) == 0) {
+        vmprint(pa, layer+1);
+      }
+    }
   }
 }
