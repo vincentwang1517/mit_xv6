@@ -95,7 +95,7 @@ kvminithart()
 pte_t *
 walk(pagetable_t pagetable, uint64 va, int alloc)
 {
-  if(va >= MAXVA)
+  if(va >= MAXVA) 
     panic("walk");
 
   for(int level = 2; level > 0; level--) {
@@ -486,15 +486,49 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   }
 }
 
+void
+vmprint_helper(pagetable_t pagetable, int layer, uint64 va)
+{
+  for (int i = 0; i < 512; i++) {
+    pte_t pte = pagetable[i];
+
+    if ((pte & PTE_V)) 
+    {
+      uint64 va_new;
+      // print layer
+      if (layer == 0) {
+        va_new = i << (9 + 9 + 12);
+        printf(" ..%p: ", (uint64*)va_new);
+      }
+      else if (layer == 1) {
+        va_new = va | (i << (9 + 12));
+        printf(" .. ..%p: ", (uint64*)va_new);
+      }
+      else if (layer == 2) {
+        va_new = va | (i << 12);
+        printf(" .. .. ..%p: ", (uint64*)va_new);
+      }
+      else panic("vmprint: layer should <= 2");
+
+      pagetable_t pa = (pagetable_t)PTE2PA(pte);
+      printf("pte %p pa %p\n", (uint64*)pte, pa);
+
+      // if not leaf
+      if ((pte & (PTE_R | PTE_W | PTE_X)) == 0) {
+        vmprint_helper(pa, layer+1, va_new);
+      }
+    }
+  }
+}
 
 #ifdef LAB_PGTBL
 void
 vmprint(pagetable_t pagetable) {
   // your code here
+  printf("page table %p\n", pagetable);
+  vmprint_helper(pagetable, 0, 0);
 }
 #endif
-
-
 
 #ifdef LAB_PGTBL
 pte_t*
