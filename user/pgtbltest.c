@@ -89,6 +89,7 @@ supercheck(uint64 s)
 {
   pte_t last_pte = 0;
 
+  // s ~ s + 512 * PGSIZE is in one megapage --- the pte should be the same
   for (uint64 p = s;  p < s + 512 * PGSIZE; p += PGSIZE) {
     pte_t pte = (pte_t) pgpte((void *) p);
     if(pte == 0)
@@ -102,10 +103,12 @@ supercheck(uint64 s)
     last_pte = pte;
   }
 
+  // cast s to pointer -> dereference -> assign value
   for(int i = 0; i < 512; i += PGSIZE){
     *(int*)(s+i) = i;
   }
 
+  // check the value
   for(int i = 0; i < 512; i += PGSIZE){
     if(*(int*)(s+i) != i)
       err("wrong value");
